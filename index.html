@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>☕ 程序员咖啡外卖记录</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, 'Segoe UI', sans-serif; background: #1a1a2e; color: #e0e0e0; min-height: 100vh; padding: 20px; }
+.container { max-width: 800px; margin: 0 auto; }
+h1 { text-align: center; font-size: 1.8rem; margin-bottom: 24px; color: #f5e6ca; }
+.card { background: #16213e; border-radius: 12px; padding: 24px; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+.form-row { display: flex; gap: 12px; margin-bottom: 14px; flex-wrap: wrap; }
+.form-group { flex: 1; min-width: 140px; }
+label { display: block; font-size: 0.85rem; color: #a0a0b0; margin-bottom: 4px; }
+input, select, textarea { width: 100%; padding: 10px 12px; border: 1px solid #2a2a4a; border-radius: 8px; background: #0f3460; color: #e0e0e0; font-size: 0.95rem; outline: none; transition: border-color 0.2s; }
+input:focus, select:focus, textarea:focus { border-color: #e94560; }
+textarea { resize: vertical; min-height: 60px; }
+.stars { display: flex; gap: 4px; padding: 8px 0; }
+.stars span { font-size: 1.6rem; cursor: pointer; opacity: 0.3; transition: opacity 0.15s, transform 0.15s; }
+.stars span.active { opacity: 1; }
+.stars span:hover { transform: scale(1.2); }
+.price-per-star { font-size: 0.85rem; color: #e94560; margin-top: 4px; min-height: 1.2em; }
+.btn { padding: 12px 28px; border: none; border-radius: 8px; font-size: 1rem; cursor: pointer; transition: all 0.2s; }
+.btn-primary { background: #e94560; color: white; }
+.btn-primary:hover { background: #c73650; transform: translateY(-1px); }
+.btn-secondary { background: #2a2a4a; color: #e0e0e0; margin-left: 8px; }
+.btn-secondary:hover { background: #3a3a5a; }
+.actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 8px; }
+.toast { position: fixed; top: 20px; right: 20px; background: #4caf50; color: white; padding: 12px 20px; border-radius: 8px; font-size: 0.9rem; opacity: 0; transform: translateY(-10px); transition: all 0.3s; z-index: 100; }
+.toast.show { opacity: 1; transform: translateY(0); }
+table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+th { text-align: left; padding: 10px 8px; border-bottom: 2px solid #2a2a4a; color: #a0a0b0; font-weight: 600; }
+td { padding: 10px 8px; border-bottom: 1px solid #1a1a3e; }
+tr:hover td { background: #1a2a4e; }
+.rating-cell { white-space: nowrap; }
+.sort-btn { cursor: pointer; user-select: none; }
+.sort-btn:hover { color: #e94560; }
+.badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; background: #2a2a4a; }
+.empty-state { text-align: center; padding: 40px; color: #606080; }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>☕ 程序员咖啡外卖记录</h1>
+
+  <div class="card">
+    <div class="form-row">
+      <div class="form-group">
+        <label>品名</label>
+        <input type="text" id="name" placeholder="燕麦拿铁（冰）">
+      </div>
+      <div class="form-group">
+        <label>品牌</label>
+        <input type="text" id="brand" placeholder="瑞幸" list="brand-list">
+        <datalist id="brand-list"></datalist>
+      </div>
+      <div class="form-group" style="max-width:120px">
+        <label>价格 (¥)</label>
+        <input type="number" id="price" step="0.01" min="0" placeholder="15.00">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>评分</label>
+        <div class="stars" id="stars">
+          <span data-v="1">⭐</span><span data-v="2">⭐</span><span data-v="3">⭐</span><span data-v="4">⭐</span><span data-v="5">⭐</span>
+        </div>
+        <div class="price-per-star" id="pps"></div>
+      </div>
+      <div class="form-group" style="flex:2">
+        <label>评价</label>
+        <textarea id="comment" placeholder="简单说两句..."></textarea>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>备注（可选：冰/热、糖度、加料等）</label>
+        <input type="text" id="note" placeholder="冰、少糖、加燕麦奶...">
+      </div>
+    </div>
+    <div class="actions">
+      <button class="btn btn-primary" onclick="addRecord()">添加记录</button>
+      <button class="btn btn-secondary" onclick="copyCSV()">📋 复制CSV行</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <span style="font-size:0.9rem;color:#a0a0b0" id="count"></span>
+      <button class="btn btn-secondary" style="font-size:0.8rem;padding:6px 14px" onclick="exportAll()">导出全部CSV</button>
+    </div>
+    <div style="overflow-x:auto">
+      <table>
+        <thead><tr>
+          <th class="sort-btn" onclick="sortBy('name')">品名</th>
+          <th class="sort-btn" onclick="sortBy('brand')">品牌</th>
+          <th class="sort-btn" onclick="sortBy('price')">价格</th>
+          <th class="sort-btn" onclick="sortBy('rating')">评分</th>
+          <th class="sort-btn" onclick="sortBy('pps')">单星价格</th>
+          <th>评价</th>
+          <th>备注</th>
+          <th></th>
+        </tr></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+      <div class="empty-state" id="empty">还没有记录，来一杯？</div>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const STORAGE_KEY = 'coffee_records';
+let records = [];
+let rating = 0;
+let sortField = '', sortAsc = true;
+
+// 初始化：从 localStorage 加载，自动迁移旧数据
+const DATA_VERSION = 2; // 每次结构变更时递增
+function init() {
+  const ver = parseInt(localStorage.getItem(STORAGE_KEY + '_ver') || '0');
+  if (ver < DATA_VERSION) {
+    localStorage.removeItem(STORAGE_KEY);
+    localStorage.setItem(STORAGE_KEY + '_ver', DATA_VERSION);
+  }
+  const saved = localStorage.getItem(STORAGE_KEY);
+  if (saved) {
+    records = JSON.parse(saved);
+  } else {
+    records = defaultData();
+    save();
+  }
+  updateBrandList();
+  render();
+}
+
+function defaultData() {
+  return [
+    {name:'燕麦拿铁',brand:'tims',price:18.5,rating:4,comment:'拿铁',note:'冰'},
+    {name:'拿铁',brand:'比星',price:15.23,rating:3,comment:'一般；没有回味',note:'冰'},
+    {name:'橙C美式',brand:'瑞幸',price:13.48,rating:2,comment:'果汁？个人不喜欢',note:'冰'},
+    {name:'深烘拿铁',brand:'瑞幸',price:11.02,rating:3,comment:'没尝出跟普通拿铁的区别',note:'冰'},
+    {name:'杨梅冷萃',brand:'tims',price:17.5,rating:1,comment:'太甜;没有咖啡味',note:''},
+    {name:'黄柠檬冰弹美式',brand:'比星',price:15.3,rating:3,comment:'有柠檬酸味和一点美式的味道',note:''},
+    {name:'费尔岛拿铁',brand:'瑞幸',price:12.18,rating:3,comment:'乌龙茶拿铁，特别的味道',note:''},
+    {name:'美式咖啡',brand:'代数学家',price:14.8,rating:3,comment:'S10 豆子很有风味',note:''},
+    {name:'燕麦奶铁',brand:'麦当劳',price:9.9,rating:4,comment:'确实好喝',note:''},
+    {name:'白葡萄气泡冰萃',brand:'比星',price:12.5,rating:4,comment:'气泡水+咖啡，有鸡尾酒的感觉，清爽',note:''},
+    {name:'伯爵扁桃仁拿铁',brand:'比星',price:14.5,rating:4,comment:'扁桃仁的香味比较浓郁，很特别的味道',note:''},
+    {name:'柚见美式',brand:'库迪',price:6.9,rating:2,comment:'没有咖啡味，补贴够便宜',note:''},
+    {name:'糯香斑斓风味拿铁',brand:'Starbucks',price:33,rating:1,comment:'糯香+零卡糖 味道很恶心',note:''},
+    {name:'山楂美式',brand:'tims',price:11.5,rating:3,comment:'摇匀之后还不错 有山楂的酸甜口感',note:''},
+    {name:'拿铁',brand:'b3',price:10,rating:3,comment:'冰有点多，冰块融化之后味道变淡',note:'冰'},
+  ];
+}
+
+function save() { localStorage.setItem(STORAGE_KEY, JSON.stringify(records)); }
+
+function starsStr(n) { return '⭐'.repeat(n); }
+function pps(price, r) { return r > 0 ? (price / r).toFixed(2) : '-'; }
+
+// 星星选择
+document.getElementById('stars').addEventListener('click', e => {
+  const v = e.target.dataset.v;
+  if (!v) return;
+  rating = parseInt(v);
+  document.querySelectorAll('#stars span').forEach((s, i) => s.classList.toggle('active', i < rating));
+  updatePPS();
+});
+
+function updatePPS() {
+  const price = parseFloat(document.getElementById('price').value);
+  const el = document.getElementById('pps');
+  if (price > 0 && rating > 0) {
+    el.textContent = `单星价格: ¥${pps(price, rating)}`;
+  } else {
+    el.textContent = '';
+  }
+}
+document.getElementById('price').addEventListener('input', updatePPS);
+
+function addRecord() {
+  const name = document.getElementById('name').value.trim();
+  const brand = document.getElementById('brand').value.trim();
+  const price = parseFloat(document.getElementById('price').value);
+  if (!name || !brand || !price || !rating) { toast('请填写完整信息', '#e94560'); return; }
+  const comment = document.getElementById('comment').value.trim();
+  const note = document.getElementById('note').value.trim();
+  const line = `${name},${brand},${price},${starsStr(rating)},${pps(price, rating)},${comment},${note}`;
+  navigator.clipboard.writeText(line).then(() => {
+    records.unshift({ name, brand, price, rating, comment, note });
+    save();
+    updateBrandList();
+    render();
+    clearForm();
+    toast('已添加并复制CSV到剪贴板 ☕📋');
+  }).catch(() => {
+    records.unshift({ name, brand, price, rating, comment, note });
+    save();
+    updateBrandList();
+    render();
+    clearForm();
+    toast('已添加 ☕（剪贴板复制失败）', '#e94560');
+  });
+}
+
+function clearForm() {
+  ['name','brand','price','comment','note'].forEach(id => document.getElementById(id).value = '');
+  rating = 0;
+  document.querySelectorAll('#stars span').forEach(s => s.classList.remove('active'));
+  document.getElementById('pps').textContent = '';
+}
+
+function deleteRecord(i) {
+  records.splice(i, 1);
+  save();
+  render();
+  toast('已删除');
+}
+
+function copyCSV() {
+  const name = document.getElementById('name').value.trim();
+  const brand = document.getElementById('brand').value.trim();
+  const price = document.getElementById('price').value;
+  const comment = document.getElementById('comment').value.trim();
+  const note = document.getElementById('note').value.trim();
+  if (!name) { toast('请先填写品名', '#e94560'); return; }
+  const line = `${name},${brand},${price},${starsStr(rating)},${pps(parseFloat(price), rating)},${comment},${note}`;
+  navigator.clipboard.writeText(line).then(() => toast('CSV行已复制到剪贴板 📋'));
+}
+
+function exportAll() {
+  let csv = '品名,品牌,价格,评分,单星价格,评价,备注\n';
+  records.forEach(r => {
+    csv += `${r.name},${r.brand},${r.price},${starsStr(r.rating)},${pps(r.price, r.rating)},${r.comment},${r.note || ''}\n`;
+  });
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'coffee.csv';
+  a.click();
+  toast('CSV已导出 📁');
+}
+
+function sortBy(field) {
+  if (sortField === field) { sortAsc = !sortAsc; } else { sortField = field; sortAsc = true; }
+  records.sort((a, b) => {
+    let va = a[field], vb = b[field];
+    if (field === 'pps') { va = a.price / (a.rating || 1); vb = b.price / (b.rating || 1); }
+    if (typeof va === 'string') return sortAsc ? va.localeCompare(vb) : vb.localeCompare(va);
+    return sortAsc ? va - vb : vb - va;
+  });
+  save();
+  render();
+}
+
+function updateBrandList() {
+  const brands = [...new Set(records.map(r => r.brand))];
+  document.getElementById('brand-list').innerHTML = brands.map(b => `<option value="${b}">`).join('');
+}
+
+function render() {
+  const tbody = document.getElementById('tbody');
+  const empty = document.getElementById('empty');
+  document.getElementById('count').textContent = `共 ${records.length} 条记录`;
+  if (!records.length) { tbody.innerHTML = ''; empty.style.display = ''; return; }
+  empty.style.display = 'none';
+  tbody.innerHTML = records.map((r, i) => `<tr>
+    <td>${esc(r.name)}</td>
+    <td><span class="badge">${esc(r.brand)}</span></td>
+    <td>¥${r.price}</td>
+    <td class="rating-cell">${starsStr(r.rating)}</td>
+    <td>¥${pps(r.price, r.rating)}</td>
+    <td>${esc(r.comment)}</td>
+    <td>${esc(r.note || '')}</td>
+    <td><span style="cursor:pointer;opacity:0.5" onclick="deleteRecord(${i})" title="删除">🗑️</span></td>
+  </tr>`).join('');
+}
+
+function esc(s) { const d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
+
+function toast(msg, bg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.background = bg || '#4caf50';
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2000);
+}
+
+init();
+</script>
+</body>
+</html>
