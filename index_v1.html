@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>☕ 程序员咖啡外卖记录</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Noto+Serif+SC:wght@400;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root[data-theme="dark"] {
+  --bg: #1b1410; --bg2: #231c16; --card: #2a2118; --card2: #332a20;
+  --input: #3a3028; --border: #4a3e32; --border2: #5a4e3a;
+  --text: #e8ddd0; --text2: #a89880; --text3: #786858;
+  --accent: #d4845a; --accent2: #c06a3a; --accent-glow: rgba(212,132,90,0.15);
+  --badge: #3a3028; --hover: #332a20;
+  --title: #f0e0c8; --bar1: #d4845a; --bar2: #7ab87a;
+  --grain-opacity: 0.04; --shadow: rgba(0,0,0,0.4);
+  --toast-bg: #4a7a4a;
+}
+:root[data-theme="light"] {
+  --bg: #f4ede4; --bg2: #ebe3d8; --card: #fffbf5; --card2: #f8f2ea;
+  --input: #f0e8de; --border: #d8cfc2; --border2: #c8bfb2;
+  --text: #3a2e22; --text2: #7a6e5e; --text3: #a89e8e;
+  --accent: #b85a30; --accent2: #a04820; --accent-glow: rgba(184,90,48,0.1);
+  --badge: #ede5da; --hover: #f5efe6;
+  --title: #4a3828; --bar1: #b85a30; --bar2: #5a9a5a;
+  --grain-opacity: 0.03; --shadow: rgba(0,0,0,0.08);
+  --toast-bg: #5a9a5a;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'Noto Serif SC', 'Georgia', serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  transition: background 0.4s, color 0.4s;
+  position: relative;
+}
+
+/* 纸张纹理叠加 */
+body::before {
+  content: '';
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  opacity: var(--grain-opacity);
+}
+
+.page { max-width: 900px; margin: 0 auto; padding: 32px 24px 60px; position: relative; z-index: 1; }
+
+/* 头部 */
+.header {
+  display: flex; justify-content: space-between; align-items: flex-end;
+  margin-bottom: 40px; padding-bottom: 20px;
+  border-bottom: 1px solid var(--border);
+}
+.header-left h1 {
+  font-family: 'Playfair Display', 'Noto Serif SC', serif;
+  font-size: 2.4rem; font-weight: 900; color: var(--title);
+  letter-spacing: -0.02em; line-height: 1.1;
+}
+.header-left .subtitle {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem; color: var(--text3); margin-top: 6px;
+  letter-spacing: 0.08em; text-transform: uppercase;
+}
+.theme-toggle {
+  background: none; border: 1px solid var(--border);
+  border-radius: 50%; width: 38px; height: 38px;
+  cursor: pointer; font-size: 1rem; color: var(--text2);
+  transition: all 0.3s; display: flex; align-items: center; justify-content: center;
+}
+.theme-toggle:hover { border-color: var(--accent); color: var(--accent); transform: rotate(30deg); }
+
+/* 卡片 */
+.card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 16px; padding: 28px; margin-bottom: 24px;
+  box-shadow: 0 2px 20px var(--shadow);
+  transition: background 0.3s, border-color 0.3s;
+}
+.card-header {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 16px;
+}
+.card-title {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem; letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--text3); font-weight: 500;
+}
+
+/* 统计卡片 */
+.stats-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; }
+.stat-card {
+  background: var(--card2); border: 1px solid var(--border);
+  border-radius: 12px; padding: 14px 16px;
+  transition: transform 0.2s, border-color 0.2s;
+}
+.stat-card:hover { transform: translateY(-2px); border-color: var(--accent); }
+.stat-brand { font-size: 0.9rem; font-weight: 700; margin-bottom: 6px; color: var(--title); }
+.stat-detail { font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; color: var(--text2); line-height: 1.6; }
+
+/* 柱状图 */
+.bar-wrap { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.bar-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem; width: 72px; text-align: right; flex-shrink: 0; color: var(--text2);
+}
+.bar-track { flex: 1; height: 22px; background: var(--card2); border-radius: 6px; overflow: hidden; border: 1px solid var(--border); }
+.bar-fill {
+  height: 100%; border-radius: 5px; transition: width 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+  display: flex; align-items: center; padding-left: 8px;
+  font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; color: #fff; font-weight: 500;
+}
+.chart-legend {
+  display: flex; gap: 20px; margin-top: 10px;
+  font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; color: var(--text3);
+}
+.legend-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 4px; vertical-align: middle; }
+
+/* 表单 */
+.form-row { display: flex; gap: 14px; margin-bottom: 16px; flex-wrap: wrap; }
+.form-group { flex: 1; min-width: 140px; }
+.form-group label {
+  display: block; font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem; letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--text3); margin-bottom: 6px;
+}
+input, select, textarea {
+  width: 100%; padding: 11px 14px;
+  border: 1px solid var(--border); border-radius: 10px;
+  background: var(--input); color: var(--text);
+  font-family: 'Noto Serif SC', serif; font-size: 0.9rem;
+  outline: none; transition: border-color 0.3s, box-shadow 0.3s;
+}
+input:focus, select:focus, textarea:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-glow);
+}
+input::placeholder, textarea::placeholder { color: var(--text3); }
+textarea { resize: vertical; min-height: 64px; }
+
+/* 星星 */
+.stars-row { display: flex; align-items: center; gap: 6px; padding: 8px 0; }
+.stars-row span[data-v] {
+  font-size: 1.5rem; cursor: pointer; opacity: 0.25;
+  transition: opacity 0.2s, transform 0.2s; filter: grayscale(0.5);
+}
+.stars-row span[data-v].active { opacity: 1; filter: grayscale(0); }
+.stars-row span[data-v]:hover { transform: scale(1.25); }
+.rating-hint {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem; color: var(--accent); min-height: 1.2em; margin-top: 2px;
+}
+.pps-hint { font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: var(--accent); margin-top: 4px; min-height: 1.2em; }
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="header">
+    <div class="header-left">
+      <h1>☕ 咖啡手帐</h1>
+      <div class="subtitle">programmer's coffee tastebook</div>
+    </div>
+    <button class="theme-toggle" onclick="toggleTheme()" title="切换主题" aria-label="切换深色/浅色主题">🌓</button>
+  </div>
+
+  <!-- 品牌统计 -->
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">📊 品牌概览</span>
+      <button class="btn btn-dice" onclick="randomPick()">🎲 今天喝什么</button>
+    </div>
+    <div class="stats-grid" id="stats"></div>
+  </div>
+
+  <!-- 可视化 -->
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">📈 品牌对比</span>
+    </div>
+    <div id="chart"></div>
+  </div>
+
+  <!-- 录入表单 -->
+  <div class="card">
+    <div class="card-header"><span class="card-title">✏️ 新记录</span></div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>品名</label>
+        <input type="text" id="name" placeholder="燕麦拿铁">
+      </div>
+      <div class="form-group">
+        <label>品牌</label>
+        <input type="text" id="brand" placeholder="瑞幸" list="brand-list">
+        <datalist id="brand-list"></datalist>
+      </div>
+      <div class="form-group" style="max-width:130px">
+        <label>价格 ¥</label>
+        <input type="number" id="price" step="0.01" min="0" placeholder="15.00">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>评分</label>
+        <div class="stars-row" id="stars">
+          <span data-v="1">⭐</span><span data-v="2">⭐</span><span data-v="3">⭐</span><span data-v="4">⭐</span><span data-v="5">⭐</span>
+        </div>
+        <div class="rating-hint" id="rating-hint"></div>
+        <div class="pps-hint" id="pps"></div>
+      </div>
+      <div class="form-group" style="flex:2">
+        <label>评价</label>
+        <textarea id="comment" placeholder="简单说两句..."></textarea>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>备注（可选）</label>
+        <input type="text" id="note" placeholder="冰 · 少糖 · 加燕麦奶">
+      </div>
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-primary" onclick="addRecord()">添加记录</button>
+      <button class="btn btn-ghost" onclick="copyCSV()">📋 复制CSV</button>
+    </div>
+  </div>
+
+  <!-- 筛选 + 表格 -->
+  <div class="card" style="padding-bottom:16px">
+    <div class="toolbar">
+      <div class="toolbar-left">
+        <input type="text" id="search" placeholder="🔍 搜索..." class="toolbar-input" oninput="render()">
+        <select id="filter-brand" class="toolbar-select" onchange="render()"><option value="">全部品牌</option></select>
+        <select id="filter-rating" class="toolbar-select" onchange="render()">
+          <option value="0">全部评分</option>
+          <option value="4">⭐⭐⭐⭐+</option>
+          <option value="3">⭐⭐⭐+</option>
+          <option value="2">⭐⭐+</option>
+        </select>
+        <select id="page-size" class="toolbar-select" style="width:72px" onchange="currentPage=1;render()">
+          <option value="10">10条</option><option value="20">20条</option><option value="50">50条</option><option value="0">全部</option>
+        </select>
+        <span class="record-count" id="count"></span>
+      </div>
+      <div class="toolbar-right">
+        <label class="btn btn-ghost" style="cursor:pointer">
+          📂 导入 <input type="file" accept=".csv" id="import-csv" style="display:none" onchange="importCSV(event)">
+        </label>
+        <button class="btn btn-ghost" onclick="exportAll()">📥 导出</button>
+      </div>
+    </div>
+    <div style="overflow-x:auto">
+      <table>
+        <thead><tr>
+          <th class="sort-btn" onclick="sortBy('name')">品名</th>
+          <th class="sort-btn" onclick="sortBy('brand')">品牌</th>
+          <th class="sort-btn" onclick="sortBy('price')">价格</th>
+          <th class="sort-btn" onclick="sortBy('rating')">评分</th>
+          <th class="sort-btn" onclick="sortBy('pps')">性价比</th>
+          <th>评价</th>
+          <th>备注</th>
+          <th></th>
+        </tr></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+      <div class="empty-state" id="empty">还没有记录，来一杯？ ☕</div>
+      <div id="pagination" class="pagination"></div>
+    </div>
+  </div>
+</div>
+
+<!-- 随机推荐弹窗 -->
+<div id="modal-overlay" class="modal-overlay" onclick="if(event.target===this)closeModal()">
+  <div class="modal-card">
+    <div class="modal-icon">☕</div>
+    <div class="modal-name" id="modal-text"></div>
+    <div class="modal-detail" id="modal-sub"></div>
+    <div class="modal-actions">
+      <button class="btn btn-primary" onclick="closeModal()">好的</button>
+      <button class="btn btn-ghost" onclick="randomPick()">再来一杯</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<style>
+/* 按钮 */
+.btn {
+  padding: 10px 22px; border: none; border-radius: 10px;
+  font-family: 'Noto Serif SC', serif; font-size: 0.85rem;
+  cursor: pointer; transition: all 0.25s; display: inline-flex; align-items: center; gap: 4px;
+}
+.btn-primary {
+  background: var(--accent); color: #fff;
+  box-shadow: 0 2px 8px rgba(212,132,90,0.3);
+}
+.btn-primary:hover { background: var(--accent2); transform: translateY(-1px); box-shadow: 0 4px 16px rgba(212,132,90,0.35); }
+.btn-ghost {
+  background: transparent; color: var(--text2);
+  border: 1px solid var(--border); padding: 8px 16px; font-size: 0.8rem;
+}
+.btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+.btn-dice {
+  background: linear-gradient(135deg, var(--accent), #c07040);
+  color: #fff; border: none; padding: 8px 18px; border-radius: 10px;
+  font-family: 'Noto Serif SC', serif; font-size: 0.8rem; cursor: pointer;
+  transition: all 0.25s; box-shadow: 0 2px 10px rgba(212,132,90,0.25);
+}
+.btn-dice:hover { transform: translateY(-2px) rotate(-2deg); box-shadow: 0 6px 20px rgba(212,132,90,0.35); }
+
+.form-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 12px; }
+
+/* 工具栏 */
+.toolbar {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 16px; flex-wrap: wrap; gap: 10px;
+}
+.toolbar-left, .toolbar-right { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.toolbar-input {
+  width: 160px; padding: 7px 12px; font-size: 0.8rem;
+  border: 1px solid var(--border); border-radius: 8px;
+  background: var(--input); color: var(--text);
+  font-family: 'Noto Serif SC', serif; outline: none; transition: border-color 0.3s;
+}
+.toolbar-input:focus { border-color: var(--accent); }
+.toolbar-select {
+  padding: 7px 10px; font-size: 0.78rem;
+  border: 1px solid var(--border); border-radius: 8px;
+  background: var(--input); color: var(--text);
+  font-family: 'JetBrains Mono', monospace; outline: none; cursor: pointer;
+}
+.record-count { font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: var(--text3); }
+
+/* 表格 */
+table { width: 100%; border-collapse: collapse; }
+th {
+  text-align: left; padding: 12px 10px;
+  border-bottom: 2px solid var(--border);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem; letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--text3); font-weight: 500;
+}
+td {
+  padding: 12px 10px; border-bottom: 1px solid var(--border);
+  font-size: 0.85rem; vertical-align: middle;
+}
+tr { transition: background 0.15s; }
+tr:hover td { background: var(--hover); }
+.sort-btn { cursor: pointer; user-select: none; transition: color 0.2s; }
+.sort-btn:hover { color: var(--accent); }
+.badge {
+  display: inline-block; padding: 3px 10px; border-radius: 6px;
+  font-family: 'JetBrains Mono', monospace; font-size: 0.7rem;
+  background: var(--badge); color: var(--text2); letter-spacing: 0.02em;
+}
+.empty-state {
+  text-align: center; padding: 48px 20px; color: var(--text3);
+  font-size: 0.95rem; font-style: italic;
+}
+.pagination {
+  display: flex; justify-content: center; align-items: center;
+  gap: 16px; margin-top: 14px; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem;
+}
+.page-arrow {
+  cursor: pointer; color: var(--text2); transition: color 0.2s;
+  padding: 4px 8px; border-radius: 6px;
+}
+.page-arrow:hover { color: var(--accent); }
+.page-arrow.disabled { opacity: 0.25; pointer-events: none; }
+
+/* 弹窗 */
+.modal-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,0.65); backdrop-filter: blur(4px);
+  z-index: 200; align-items: center; justify-content: center;
+}
+.modal-card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 20px; padding: 40px 36px; max-width: 380px; width: 90%;
+  text-align: center; box-shadow: 0 16px 48px rgba(0,0,0,0.5);
+  animation: modalIn 0.3s ease;
+}
+@keyframes modalIn { from { opacity: 0; transform: scale(0.9) translateY(10px); } to { opacity: 1; transform: none; } }
+.modal-icon { font-size: 3.5rem; margin-bottom: 16px; }
+.modal-name { font-family: 'Playfair Display', serif; font-size: 1.3rem; font-weight: 700; color: var(--title); margin-bottom: 8px; }
+.modal-detail { font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; color: var(--text2); margin-bottom: 24px; line-height: 1.6; }
+.modal-actions { display: flex; gap: 10px; justify-content: center; }
+
+/* Toast */
+.toast {
+  position: fixed; top: 24px; right: 24px; z-index: 300;
+  background: var(--toast-bg); color: #fff;
+  padding: 12px 22px; border-radius: 10px;
+  font-family: 'JetBrains Mono', monospace; font-size: 0.8rem;
+  opacity: 0; transform: translateY(-12px);
+  transition: all 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+}
+.toast.show { opacity: 1; transform: translateY(0); }
+
+/* 删除按钮 */
+.delete-btn {
+  cursor: pointer; opacity: 0.3; transition: opacity 0.2s, transform 0.2s;
+  font-size: 0.85rem;
+}
+.delete-btn:hover { opacity: 0.8; transform: scale(1.15); }
+
+/* 页面加载动画 */
+.card { animation: fadeUp 0.5s ease both; }
+.card:nth-child(1) { animation-delay: 0.05s; }
+.card:nth-child(2) { animation-delay: 0.1s; }
+.card:nth-child(3) { animation-delay: 0.15s; }
+.card:nth-child(4) { animation-delay: 0.2s; }
+@keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+</style>
+
+<script>
+const STORAGE_KEY = 'coffee_records';
+let records = [];
+let rating = 0;
+let sortField = '', sortAsc = true;
+let currentPage = 1;
+
+const DATA_VERSION = 3;
+const migrations = {
+  2: (data) => data.map(r => ({ ...r, note: r.note ?? '' })),
+  3: (data) => data.map(r => {
+    const m = r.name.match(/^(.+?)[（(](冰|热)[）)]$/);
+    if (m) return { ...r, name: m[1], note: r.note ? `${m[2]}、${r.note}` : m[2] };
+    return r;
+  }),
+};
+
+function init() {
+  let ver = parseInt(localStorage.getItem(STORAGE_KEY + '_ver') || '0');
+  const saved = localStorage.getItem(STORAGE_KEY);
+  if (saved) {
+    records = JSON.parse(saved);
+    while (ver < DATA_VERSION) { ver++; if (migrations[ver]) records = migrations[ver](records); }
+    localStorage.setItem(STORAGE_KEY + '_ver', String(DATA_VERSION));
+    save();
+  } else {
+    records = defaultData();
+    localStorage.setItem(STORAGE_KEY + '_ver', String(DATA_VERSION));
+    save();
+  }
+  const t = localStorage.getItem('theme') || 'dark';
+  document.documentElement.setAttribute('data-theme', t);
+  updateBrandList(); renderStats(); renderChart(); render();
+}
+
+function defaultData() {
+  return [
+    {name:'燕麦拿铁',brand:'tims',price:18.5,rating:4,comment:'拿铁',note:'冰'},
+    {name:'拿铁',brand:'比星',price:15.23,rating:3,comment:'一般；没有回味',note:'冰'},
+    {name:'橙C美式',brand:'瑞幸',price:13.48,rating:2,comment:'果汁？个人不喜欢',note:'冰'},
+    {name:'深烘拿铁',brand:'瑞幸',price:11.02,rating:3,comment:'没尝出跟普通拿铁的区别',note:'冰'},
+    {name:'杨梅冷萃',brand:'tims',price:17.5,rating:1,comment:'太甜;没有咖啡味',note:''},
+    {name:'黄柠檬冰弹美式',brand:'比星',price:15.3,rating:3,comment:'有柠檬酸味和一点美式的味道',note:''},
+    {name:'费尔岛拿铁',brand:'瑞幸',price:12.18,rating:3,comment:'乌龙茶拿铁，特别的味道',note:''},
+    {name:'美式咖啡',brand:'代数学家',price:14.8,rating:3,comment:'S10 豆子很有风味',note:''},
+    {name:'燕麦奶铁',brand:'麦当劳',price:9.9,rating:4,comment:'确实好喝',note:''},
+    {name:'白葡萄气泡冰萃',brand:'比星',price:12.5,rating:4,comment:'气泡水+咖啡，有鸡尾酒的感觉，清爽',note:''},
+    {name:'伯爵扁桃仁拿铁',brand:'比星',price:14.5,rating:4,comment:'扁桃仁的香味比较浓郁，很特别的味道',note:''},
+    {name:'柚见美式',brand:'库迪',price:6.9,rating:2,comment:'没有咖啡味，补贴够便宜',note:''},
+    {name:'糯香斑斓风味拿铁',brand:'Starbucks',price:33,rating:1,comment:'糯香+零卡糖 味道很恶心',note:''},
+    {name:'山楂美式',brand:'tims',price:11.5,rating:3,comment:'摇匀之后还不错 有山楂的酸甜口感',note:''},
+    {name:'拿铁',brand:'b3',price:10,rating:3,comment:'冰有点多，冰块融化之后味道变淡',note:'冰'},
+  ];
+}
+
+function save() { localStorage.setItem(STORAGE_KEY, JSON.stringify(records)); }
+function starsStr(n) { return '⭐'.repeat(n); }
+function pps(price, r) { return r > 0 ? (price / r).toFixed(2) : '-'; }
+
+function toggleTheme() {
+  const cur = document.documentElement.getAttribute('data-theme');
+  const next = cur === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  localStorage.setItem('theme', next);
+}
+
+function renderStats() {
+  const brands = {};
+  records.forEach(r => {
+    if (!brands[r.brand]) brands[r.brand] = { total: 0, stars: 0, price: 0 };
+    brands[r.brand].total++; brands[r.brand].stars += r.rating; brands[r.brand].price += r.price;
+  });
+  document.getElementById('stats').innerHTML = Object.entries(brands).map(([b, d]) => {
+    const avg = (d.stars / d.total).toFixed(1);
+    const avgPps = (d.price / d.stars).toFixed(2);
+    return `<div class="stat-card">
+      <div class="stat-brand">${esc(b)}</div>
+      <div class="stat-detail">均分 ${avg} ⭐ · ${d.total} 杯<br>单星 ¥${avgPps}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderChart() {
+  const brands = {};
+  records.forEach(r => {
+    if (!brands[r.brand]) brands[r.brand] = { stars: 0, price: 0, count: 0 };
+    brands[r.brand].stars += r.rating; brands[r.brand].price += r.price; brands[r.brand].count++;
+  });
+  const entries = Object.entries(brands).map(([b, d]) => ({
+    brand: b, avgRating: d.stars / d.count, avgPps: d.price / d.stars
+  }));
+  const maxP = Math.max(...entries.map(e => e.avgPps), 1);
+  document.getElementById('chart').innerHTML = entries.map(e => `
+    <div class="bar-wrap">
+      <div class="bar-label">${esc(e.brand)}</div>
+      <div class="bar-track"><div class="bar-fill" style="width:${(e.avgRating/5*100).toFixed(0)}%;background:var(--bar1)">${e.avgRating.toFixed(1)}⭐</div></div>
+      <div class="bar-track"><div class="bar-fill" style="width:${(e.avgPps/maxP*100).toFixed(0)}%;background:var(--bar2)">¥${e.avgPps.toFixed(1)}</div></div>
+    </div>
+  `).join('') + `<div class="chart-legend"><span><span class="legend-dot" style="background:var(--bar1)"></span>平均评分</span><span><span class="legend-dot" style="background:var(--bar2)"></span>单星价格（越低越值）</span></div>`;
+}
+
+function randomPick() {
+  const good = records.filter(r => r.rating >= 3);
+  if (!good.length) { toast('没有3星以上的记录', 'var(--accent)'); return; }
+  const r = good[Math.floor(Math.random() * good.length)];
+  document.getElementById('modal-text').textContent = `${r.name} — ${r.brand}`;
+  document.getElementById('modal-sub').textContent = `¥${r.price} · ${starsStr(r.rating)}\n${r.comment}`;
+  document.getElementById('modal-overlay').style.display = 'flex';
+}
+function closeModal() { document.getElementById('modal-overlay').style.display = 'none'; }
+
+function importCSV(e) {
+  const file = e.target.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(ev) {
+    const lines = ev.target.result.split('\n').filter(l => l.trim());
+    if (lines.length < 2) { toast('CSV为空', 'var(--accent)'); return; }
+    let count = 0;
+    for (let i = 1; i < lines.length; i++) {
+      const cols = lines[i].split(','); if (cols.length < 5) continue;
+      const name = cols[0].trim(), brand = cols[1].trim(), price = parseFloat(cols[2]);
+      const rm = (cols[3]||'').match(/⭐/g); const r = rm ? rm.length : 0;
+      const comment = (cols[5]||'').trim(); const note = (cols[6]||'').trim();
+      if (!name || !brand || !price) continue;
+      if (!records.some(rec => rec.name === name && rec.brand === brand)) { records.push({name,brand,price,rating:r,comment,note}); count++; }
+    }
+    save(); updateBrandList(); renderStats(); renderChart(); render();
+    toast(`已导入 ${count} 条新记录`); e.target.value = '';
+  };
+  reader.readAsText(file);
+}
+
+const RATING_HINTS = ['', '🤮 垃圾还钱', '😐 一言难尽', '🤔 无功无过', '😋 值得一试', '🤩 惊为天人'];
+
+document.getElementById('stars').addEventListener('click', e => {
+  const v = e.target.dataset.v; if (!v) return;
+  rating = parseInt(v);
+  document.querySelectorAll('#stars span[data-v]').forEach((s, i) => s.classList.toggle('active', i < rating));
+  document.getElementById('rating-hint').textContent = RATING_HINTS[rating] || '';
+  updatePPS();
+});
+function updatePPS() {
+  const price = parseFloat(document.getElementById('price').value);
+  document.getElementById('pps').textContent = (price > 0 && rating > 0) ? `单星 ¥${pps(price, rating)}` : '';
+}
+document.getElementById('price').addEventListener('input', updatePPS);
+
+function addRecord() {
+  const name = document.getElementById('name').value.trim();
+  const brand = document.getElementById('brand').value.trim();
+  const price = parseFloat(document.getElementById('price').value);
+  if (!name || !brand || !price || !rating) { toast('请填写完整信息', 'var(--accent)'); return; }
+  const comment = document.getElementById('comment').value.trim();
+  const note = document.getElementById('note').value.trim();
+  const line = `${name},${brand},${price},${starsStr(rating)},${pps(price, rating)},${comment},${note}`;
+  navigator.clipboard.writeText(line).then(() => {
+    finishAdd(name,brand,price,comment,note); toast('已添加并复制CSV ☕📋');
+  }).catch(() => {
+    finishAdd(name,brand,price,comment,note); toast('已添加 ☕', 'var(--accent)');
+  });
+}
+function finishAdd(name,brand,price,comment,note) {
+  records.unshift({name,brand,price,rating,comment,note});
+  save(); updateBrandList(); renderStats(); renderChart(); render(); clearForm();
+}
+function clearForm() {
+  ['name','brand','price','comment','note'].forEach(id => document.getElementById(id).value = '');
+  rating = 0;
+  document.querySelectorAll('#stars span[data-v]').forEach(s => s.classList.remove('active'));
+  document.getElementById('pps').textContent = '';
+  document.getElementById('rating-hint').textContent = '';
+}
+function deleteRecord(i) {
+  const filtered = getFiltered(); const real = records.indexOf(filtered[i]);
+  if (real > -1) records.splice(real, 1);
+  save(); renderStats(); renderChart(); render(); toast('已删除');
+}
+function copyCSV() {
+  const name = document.getElementById('name').value.trim();
+  const brand = document.getElementById('brand').value.trim();
+  const price = document.getElementById('price').value;
+  const comment = document.getElementById('comment').value.trim();
+  const note = document.getElementById('note').value.trim();
+  if (!name) { toast('请先填写品名', 'var(--accent)'); return; }
+  const line = `${name},${brand},${price},${starsStr(rating)},${pps(parseFloat(price), rating)},${comment},${note}`;
+  navigator.clipboard.writeText(line).then(() => toast('CSV已复制 📋'));
+}
+function exportAll() {
+  let csv = '品名,品牌,价格,评分,单星价格,评价,备注\n';
+  records.forEach(r => { csv += `${r.name},${r.brand},${r.price},${starsStr(r.rating)},${pps(r.price, r.rating)},${r.comment},${r.note||''}\n`; });
+  const blob = new Blob(['\uFEFF'+csv], {type:'text/csv;charset=utf-8'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'coffee.csv'; a.click();
+  toast('CSV已导出 📁');
+}
+function sortBy(field) {
+  if (sortField === field) { sortAsc = !sortAsc; } else { sortField = field; sortAsc = true; }
+  records.sort((a, b) => {
+    let va = a[field], vb = b[field];
+    if (field === 'pps') { va = a.price/(a.rating||1); vb = b.price/(b.rating||1); }
+    if (typeof va === 'string') return sortAsc ? va.localeCompare(vb) : vb.localeCompare(va);
+    return sortAsc ? va - vb : vb - va;
+  });
+  save(); render();
+}
+function updateBrandList() {
+  const brands = [...new Set(records.map(r => r.brand))];
+  document.getElementById('brand-list').innerHTML = brands.map(b => `<option value="${b}">`).join('');
+  const sel = document.getElementById('filter-brand'); const cur = sel.value;
+  sel.innerHTML = '<option value="">全部品牌</option>' + brands.map(b => `<option value="${b}">${b}</option>`).join('');
+  sel.value = cur;
+}
+function getFiltered() {
+  const search = document.getElementById('search').value.trim().toLowerCase();
+  const brandF = document.getElementById('filter-brand').value;
+  const ratingF = parseInt(document.getElementById('filter-rating').value) || 0;
+  return records.filter(r => {
+    if (brandF && r.brand !== brandF) return false;
+    if (r.rating < ratingF) return false;
+    if (search && !r.name.toLowerCase().includes(search) && !(r.comment||'').toLowerCase().includes(search)) return false;
+    return true;
+  });
+}
+function render() {
+  const filtered = getFiltered();
+  const tbody = document.getElementById('tbody');
+  const empty = document.getElementById('empty');
+  const pageSize = parseInt(document.getElementById('page-size').value) || 0;
+  let paged = filtered, totalPages = 1;
+  if (pageSize > 0) {
+    totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+    if (currentPage > totalPages) currentPage = totalPages;
+    paged = filtered.slice((currentPage-1)*pageSize, currentPage*pageSize);
+  } else { currentPage = 1; }
+  document.getElementById('count').textContent = `${filtered.length} / ${records.length}`;
+  if (!filtered.length) { tbody.innerHTML=''; empty.style.display=''; document.getElementById('pagination').innerHTML=''; return; }
+  empty.style.display = 'none';
+  tbody.innerHTML = paged.map((r,i) => {
+    const ri = filtered.indexOf(r);
+    return `<tr>
+      <td>${esc(r.name)}</td>
+      <td><span class="badge">${esc(r.brand)}</span></td>
+      <td style="font-family:'JetBrains Mono',monospace;font-size:0.8rem">¥${r.price}</td>
+      <td style="white-space:nowrap">${starsStr(r.rating)}</td>
+      <td style="font-family:'JetBrains Mono',monospace;font-size:0.8rem">¥${pps(r.price, r.rating)}</td>
+      <td>${esc(r.comment)}</td>
+      <td style="color:var(--text3);font-size:0.8rem">${esc(r.note||'')}</td>
+      <td><span class="delete-btn" onclick="deleteRecord(${ri})" title="删除">🗑️</span></td>
+    </tr>`;
+  }).join('');
+  const pg = document.getElementById('pagination');
+  if (pageSize > 0 && totalPages > 1) {
+    pg.innerHTML = `<span class="page-arrow ${currentPage<=1?'disabled':''}" onclick="currentPage--;render()">◀</span>
+      <span style="color:var(--text3)">${currentPage} / ${totalPages}</span>
+      <span class="page-arrow ${currentPage>=totalPages?'disabled':''}" onclick="currentPage++;render()">▶</span>`;
+  } else { pg.innerHTML = ''; }
+}
+function esc(s) { const d = document.createElement('div'); d.textContent = s||''; return d.innerHTML; }
+function toast(msg, bg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.style.background = bg || 'var(--toast-bg)';
+  t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2200);
+}
+init();
+</script>
+</body>
+</html>

@@ -1,54 +1,76 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh-CN" data-theme="dark">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>☕ 程序员咖啡外卖记录</title>
 <style>
+:root[data-theme="dark"] {
+  --bg: #1a1a2e; --card: #16213e; --input: #0f3460; --border: #2a2a4a;
+  --text: #e0e0e0; --text2: #a0a0b0; --accent: #e94560; --accent2: #c73650;
+  --badge: #2a2a4a; --hover: #1a2a4e; --title: #f5e6ca; --bar1: #e94560; --bar2: #4caf50;
+}
+:root[data-theme="light"] {
+  --bg: #f5f0eb; --card: #ffffff; --input: #f0ece6; --border: #d4cfc8;
+  --text: #2c2c2c; --text2: #6b6560; --accent: #c0392b; --accent2: #a93226;
+  --badge: #e8e2da; --hover: #f0ece6; --title: #5d4037; --bar1: #c0392b; --bar2: #27ae60;
+}
 * { margin: 0; padding: 0; box-sizing: border-box; }
-body { font-family: -apple-system, 'Segoe UI', sans-serif; background: #1a1a2e; color: #e0e0e0; min-height: 100vh; padding: 20px; }
-.container { max-width: 800px; margin: 0 auto; }
-h1 { text-align: center; font-size: 1.8rem; margin-bottom: 24px; color: #f5e6ca; }
-.card { background: #16213e; border-radius: 12px; padding: 24px; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+body { font-family: -apple-system, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; padding: 20px; transition: background 0.3s, color 0.3s; }
+.container { max-width: 860px; margin: 0 auto; }
+.header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+h1 { font-size: 1.8rem; color: var(--title); }
+.theme-toggle { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 6px 12px; cursor: pointer; font-size: 1.1rem; color: var(--text); }
+.card { background: var(--card); border-radius: 12px; padding: 24px; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
 .form-row { display: flex; gap: 12px; margin-bottom: 14px; flex-wrap: wrap; }
 .form-group { flex: 1; min-width: 140px; }
-label { display: block; font-size: 0.85rem; color: #a0a0b0; margin-bottom: 4px; }
-input, select, textarea { width: 100%; padding: 10px 12px; border: 1px solid #2a2a4a; border-radius: 8px; background: #0f3460; color: #e0e0e0; font-size: 0.95rem; outline: none; transition: border-color 0.2s; }
-input:focus, select:focus, textarea:focus { border-color: #e94560; }
+label { display: block; font-size: 0.85rem; color: var(--text2); margin-bottom: 4px; }
+input, select, textarea { width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; background: var(--input); color: var(--text); font-size: 0.95rem; outline: none; transition: border-color 0.2s; }
+input:focus, select:focus, textarea:focus { border-color: var(--accent); }
 textarea { resize: vertical; min-height: 60px; }
 .stars { display: flex; gap: 4px; padding: 8px 0; }
 .stars span { font-size: 1.6rem; cursor: pointer; opacity: 0.3; transition: opacity 0.15s, transform 0.15s; }
 .stars span.active { opacity: 1; }
 .stars span:hover { transform: scale(1.2); }
-.price-per-star { font-size: 0.85rem; color: #e94560; margin-top: 4px; min-height: 1.2em; }
-.btn { padding: 12px 28px; border: none; border-radius: 8px; font-size: 1rem; cursor: pointer; transition: all 0.2s; }
-.btn-primary { background: #e94560; color: white; }
-.btn-primary:hover { background: #c73650; transform: translateY(-1px); }
-.btn-secondary { background: #2a2a4a; color: #e0e0e0; margin-left: 8px; }
-.btn-secondary:hover { background: #3a3a5a; }
-.actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 8px; }
-.toast { position: fixed; top: 20px; right: 20px; background: #4caf50; color: white; padding: 12px 20px; border-radius: 8px; font-size: 0.9rem; opacity: 0; transform: translateY(-10px); transition: all 0.3s; z-index: 100; }
-.toast.show { opacity: 1; transform: translateY(0); }
-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
-th { text-align: left; padding: 10px 8px; border-bottom: 2px solid #2a2a4a; color: #a0a0b0; font-weight: 600; }
-td { padding: 10px 8px; border-bottom: 1px solid #1a1a3e; }
-tr:hover td { background: #1a2a4e; }
-.rating-cell { white-space: nowrap; }
-.sort-btn { cursor: pointer; user-select: none; }
-.sort-btn:hover { color: #e94560; }
-.badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; background: #2a2a4a; }
-.empty-state { text-align: center; padding: 40px; color: #606080; }
+.price-per-star { font-size: 0.85rem; color: var(--accent); margin-top: 4px; min-height: 1.2em; }
+.btn { padding: 10px 22px; border: none; border-radius: 8px; font-size: 0.9rem; cursor: pointer; transition: all 0.2s; }
+.btn-primary { background: var(--accent); color: white; }
+.btn-primary:hover { background: var(--accent2); transform: translateY(-1px); }
+.btn-secondary { background: var(--badge); color: var(--text); }
+.btn-secondary:hover { opacity: 0.85; }
+.btn-fun { background: linear-gradient(135deg, #f39c12, #e74c3c); color: white; }
+.btn-fun:hover { transform: translateY(-1px) scale(1.02); }
+.actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
 </style>
 </head>
 <body>
 <div class="container">
-  <h1>☕ 程序员咖啡外卖记录</h1>
+  <div class="header">
+    <h1>☕ 程序员咖啡外卖记录</h1>
+    <button class="theme-toggle" onclick="toggleTheme()" title="切换主题">🌓</button>
+  </div>
 
+  <!-- 品牌统计卡片 -->
+  <div class="card" id="stats-card" style="padding:16px 24px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+      <span style="font-size:0.85rem;color:var(--text2)">📊 品牌概览</span>
+      <button class="btn btn-fun" style="padding:6px 16px;font-size:0.8rem" onclick="randomPick()">🎲 今天喝什么</button>
+    </div>
+    <div id="stats" style="display:flex;gap:10px;flex-wrap:wrap"></div>
+  </div>
+
+  <!-- 可视化 -->
+  <div class="card" id="chart-card" style="padding:16px 24px">
+    <span style="font-size:0.85rem;color:var(--text2)">📈 品牌平均评分 vs 单星价格</span>
+    <div id="chart" style="margin-top:12px"></div>
+  </div>
+
+  <!-- 录入表单 -->
   <div class="card">
     <div class="form-row">
       <div class="form-group">
         <label>品名</label>
-        <input type="text" id="name" placeholder="燕麦拿铁（冰）">
+        <input type="text" id="name" placeholder="燕麦拿铁">
       </div>
       <div class="form-group">
         <label>品牌</label>
@@ -66,6 +88,7 @@ tr:hover td { background: #1a2a4e; }
         <div class="stars" id="stars">
           <span data-v="1">⭐</span><span data-v="2">⭐</span><span data-v="3">⭐</span><span data-v="4">⭐</span><span data-v="5">⭐</span>
         </div>
+        <div id="rating-hint" style="font-size:0.75rem;color:var(--text2);min-height:1.2em"></div>
         <div class="price-per-star" id="pps"></div>
       </div>
       <div class="form-group" style="flex:2">
@@ -85,10 +108,34 @@ tr:hover td { background: #1a2a4e; }
     </div>
   </div>
 
+  <!-- 筛选 + 表格 -->
   <div class="card">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-      <span style="font-size:0.9rem;color:#a0a0b0" id="count"></span>
-      <button class="btn btn-secondary" style="font-size:0.8rem;padding:6px 14px" onclick="exportAll()">导出全部CSV</button>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <input type="text" id="search" placeholder="🔍 搜索品名/评价..." style="width:180px;padding:6px 10px;font-size:0.8rem" oninput="render()">
+        <select id="filter-brand" style="width:120px;padding:6px 10px;font-size:0.8rem" onchange="render()">
+          <option value="">全部品牌</option>
+        </select>
+        <select id="filter-rating" style="width:120px;padding:6px 10px;font-size:0.8rem" onchange="render()">
+          <option value="0">全部评分</option>
+          <option value="4">⭐⭐⭐⭐ 以上</option>
+          <option value="3">⭐⭐⭐ 以上</option>
+          <option value="2">⭐⭐ 以上</option>
+        </select>
+        <span style="font-size:0.8rem;color:var(--text2)" id="count"></span>
+        <select id="page-size" style="width:80px;padding:4px 8px;font-size:0.8rem" onchange="currentPage=1;render()">
+          <option value="10">10条</option>
+          <option value="20">20条</option>
+          <option value="50">50条</option>
+          <option value="0">全部</option>
+        </select>
+      </div>
+      <div style="display:flex;gap:6px">
+        <label class="btn btn-secondary" style="font-size:0.8rem;padding:6px 14px;cursor:pointer">
+          📂 导入CSV <input type="file" accept=".csv" id="import-csv" style="display:none" onchange="importCSV(event)">
+        </label>
+        <button class="btn btn-secondary" style="font-size:0.8rem;padding:6px 14px" onclick="exportAll()">导出CSV</button>
+      </div>
     </div>
     <div style="overflow-x:auto">
       <table>
@@ -104,34 +151,85 @@ tr:hover td { background: #1a2a4e; }
         </tr></thead>
         <tbody id="tbody"></tbody>
       </table>
-      <div class="empty-state" id="empty">还没有记录，来一杯？</div>
+      <div class="empty-state" id="empty" style="text-align:center;padding:40px;color:var(--text2)">还没有记录，来一杯？</div>
+      <div id="pagination" style="display:flex;justify-content:center;align-items:center;gap:12px;margin-top:12px;font-size:0.85rem"></div>
     </div>
   </div>
 </div>
-<div class="toast" id="toast"></div>
+
+<!-- 随机推荐弹窗 -->
+<div id="modal-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:200;display:none;align-items:center;justify-content:center">
+  <div style="background:var(--card);border-radius:16px;padding:32px;max-width:360px;text-align:center;box-shadow:0 8px 32px rgba(0,0,0,0.4)">
+    <div style="font-size:3rem;margin-bottom:12px">☕</div>
+    <div id="modal-text" style="font-size:1.1rem;margin-bottom:8px"></div>
+    <div id="modal-sub" style="font-size:0.85rem;color:var(--text2);margin-bottom:20px"></div>
+    <button class="btn btn-primary" onclick="closeModal()">好的</button>
+    <button class="btn btn-secondary" onclick="randomPick()" style="margin-left:6px">再来一杯</button>
+  </div>
+</div>
+
+<div class="toast" id="toast" style="position:fixed;top:20px;right:20px;background:#4caf50;color:white;padding:12px 20px;border-radius:8px;font-size:0.9rem;opacity:0;transform:translateY(-10px);transition:all 0.3s;z-index:100"></div>
+
+<style>
+.toast.show { opacity: 1; transform: translateY(0); }
+table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+th { text-align: left; padding: 10px 8px; border-bottom: 2px solid var(--border); color: var(--text2); font-weight: 600; }
+td { padding: 10px 8px; border-bottom: 1px solid var(--border); }
+tr:hover td { background: var(--hover); }
+.sort-btn { cursor: pointer; user-select: none; }
+.sort-btn:hover { color: var(--accent); }
+.badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; background: var(--badge); }
+.stat-card { background: var(--input); border-radius: 8px; padding: 10px 14px; min-width: 120px; flex: 1; }
+.stat-brand { font-size: 0.8rem; font-weight: 600; margin-bottom: 4px; }
+.stat-row { font-size: 0.75rem; color: var(--text2); }
+.bar-wrap { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; }
+.bar-label { font-size: 0.8rem; width: 70px; text-align: right; flex-shrink: 0; }
+.bar-track { flex: 1; height: 18px; background: var(--input); border-radius: 4px; overflow: hidden; position: relative; }
+.bar-fill { height: 100%; border-radius: 4px; transition: width 0.5s ease; display: flex; align-items: center; padding-left: 6px; font-size: 0.7rem; color: white; }
+.bar-val { font-size: 0.75rem; width: 50px; color: var(--text2); }
+</style>
 
 <script>
 const STORAGE_KEY = 'coffee_records';
 let records = [];
 let rating = 0;
 let sortField = '', sortAsc = true;
+let currentPage = 1;
 
-// 初始化：从 localStorage 加载，自动迁移旧数据
-const DATA_VERSION = 2; // 每次结构变更时递增
+const DATA_VERSION = 3;
+const migrations = {
+  // v1 -> v2: 添加 note 字段
+  2: (data) => data.map(r => ({ ...r, note: r.note ?? '' })),
+  // v2 -> v3: 品名去掉括号里的冰/热，移到 note
+  3: (data) => data.map(r => {
+    const m = r.name.match(/^(.+?)[（(](冰|热)[）)]$/);
+    if (m) return { ...r, name: m[1], note: r.note ? `${m[2]}、${r.note}` : m[2] };
+    return r;
+  }),
+};
 function init() {
-  const ver = parseInt(localStorage.getItem(STORAGE_KEY + '_ver') || '0');
-  if (ver < DATA_VERSION) {
-    localStorage.removeItem(STORAGE_KEY);
-    localStorage.setItem(STORAGE_KEY + '_ver', DATA_VERSION);
-  }
+  let ver = parseInt(localStorage.getItem(STORAGE_KEY + '_ver') || '0');
   const saved = localStorage.getItem(STORAGE_KEY);
   if (saved) {
     records = JSON.parse(saved);
+    // 逐版本迁移
+    while (ver < DATA_VERSION) {
+      ver++;
+      if (migrations[ver]) records = migrations[ver](records);
+    }
+    localStorage.setItem(STORAGE_KEY + '_ver', String(DATA_VERSION));
+    save();
   } else {
     records = defaultData();
+    localStorage.setItem(STORAGE_KEY + '_ver', String(DATA_VERSION));
     save();
   }
+  // 主题
+  const t = localStorage.getItem('theme') || 'dark';
+  document.documentElement.setAttribute('data-theme', t);
   updateBrandList();
+  renderStats();
+  renderChart();
   render();
 }
 
@@ -156,9 +254,103 @@ function defaultData() {
 }
 
 function save() { localStorage.setItem(STORAGE_KEY, JSON.stringify(records)); }
-
 function starsStr(n) { return '⭐'.repeat(n); }
 function pps(price, r) { return r > 0 ? (price / r).toFixed(2) : '-'; }
+
+// 主题切换
+function toggleTheme() {
+  const cur = document.documentElement.getAttribute('data-theme');
+  const next = cur === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  localStorage.setItem('theme', next);
+}
+
+// 品牌统计
+function renderStats() {
+  const brands = {};
+  records.forEach(r => {
+    if (!brands[r.brand]) brands[r.brand] = { total: 0, stars: 0, price: 0 };
+    brands[r.brand].total++;
+    brands[r.brand].stars += r.rating;
+    brands[r.brand].price += r.price;
+  });
+  const el = document.getElementById('stats');
+  el.innerHTML = Object.entries(brands).map(([b, d]) => {
+    const avg = (d.stars / d.total).toFixed(1);
+    const avgPps = (d.price / d.stars).toFixed(2);
+    return `<div class="stat-card">
+      <div class="stat-brand">${esc(b)}</div>
+      <div class="stat-row">均分 ${avg} ⭐ · ${d.total} 杯</div>
+      <div class="stat-row">单星 ¥${avgPps}</div>
+    </div>`;
+  }).join('');
+}
+
+// 纯CSS柱状图
+function renderChart() {
+  const brands = {};
+  records.forEach(r => {
+    if (!brands[r.brand]) brands[r.brand] = { stars: 0, price: 0, count: 0 };
+    brands[r.brand].stars += r.rating;
+    brands[r.brand].price += r.price;
+    brands[r.brand].count++;
+  });
+  const entries = Object.entries(brands).map(([b, d]) => ({
+    brand: b, avgRating: d.stars / d.count, avgPps: d.price / d.stars
+  }));
+  const maxR = 5;
+  const maxP = Math.max(...entries.map(e => e.avgPps), 1);
+  const el = document.getElementById('chart');
+  el.innerHTML = entries.map(e => `
+    <div class="bar-wrap">
+      <div class="bar-label">${esc(e.brand)}</div>
+      <div class="bar-track"><div class="bar-fill" style="width:${(e.avgRating/maxR*100).toFixed(0)}%;background:var(--bar1)">${e.avgRating.toFixed(1)}⭐</div></div>
+      <div class="bar-track"><div class="bar-fill" style="width:${(e.avgPps/maxP*100).toFixed(0)}%;background:var(--bar2)">¥${e.avgPps.toFixed(1)}</div></div>
+    </div>
+  `).join('') + '<div style="display:flex;gap:16px;margin-top:6px;font-size:0.7rem;color:var(--text2)"><span>🔴 平均评分</span><span>🟢 单星价格（越低越值）</span></div>';
+}
+
+// 随机推荐
+function randomPick() {
+  const good = records.filter(r => r.rating >= 3);
+  if (!good.length) { toast('没有3星以上的记录', '#e94560'); return; }
+  const r = good[Math.floor(Math.random() * good.length)];
+  document.getElementById('modal-text').textContent = `${r.name} — ${r.brand}`;
+  document.getElementById('modal-sub').textContent = `¥${r.price} · ${starsStr(r.rating)} · ${r.comment}`;
+  const m = document.getElementById('modal-overlay');
+  m.style.display = 'flex';
+}
+function closeModal() { document.getElementById('modal-overlay').style.display = 'none'; }
+
+// 导入CSV
+function importCSV(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(ev) {
+    const lines = ev.target.result.split('\n').filter(l => l.trim());
+    if (lines.length < 2) { toast('CSV为空', '#e94560'); return; }
+    let count = 0;
+    for (let i = 1; i < lines.length; i++) {
+      const cols = lines[i].split(',');
+      if (cols.length < 5) continue;
+      const name = cols[0].trim(), brand = cols[1].trim(), price = parseFloat(cols[2]);
+      const ratingMatch = (cols[3] || '').match(/⭐/g);
+      const r = ratingMatch ? ratingMatch.length : 0;
+      const comment = (cols[5] || '').trim();
+      const note = (cols[6] || '').trim();
+      if (!name || !brand || !price) continue;
+      const exists = records.some(rec => rec.name === name && rec.brand === brand);
+      if (!exists) { records.push({ name, brand, price, rating: r, comment, note }); count++; }
+    }
+    save(); updateBrandList(); renderStats(); renderChart(); render();
+    toast(`已导入 ${count} 条新记录 📂`);
+    e.target.value = '';
+  };
+  reader.readAsText(file);
+}
+
+const RATING_HINTS = ['', '🤮 垃圾还钱', '😐 一言难尽', '🤔 无功无过', '😋 值得一试', '🤩 惊为天人'];
 
 // 星星选择
 document.getElementById('stars').addEventListener('click', e => {
@@ -166,17 +358,13 @@ document.getElementById('stars').addEventListener('click', e => {
   if (!v) return;
   rating = parseInt(v);
   document.querySelectorAll('#stars span').forEach((s, i) => s.classList.toggle('active', i < rating));
+  document.getElementById('rating-hint').textContent = RATING_HINTS[rating] || '';
   updatePPS();
 });
-
 function updatePPS() {
   const price = parseFloat(document.getElementById('price').value);
   const el = document.getElementById('pps');
-  if (price > 0 && rating > 0) {
-    el.textContent = `单星价格: ¥${pps(price, rating)}`;
-  } else {
-    el.textContent = '';
-  }
+  el.textContent = (price > 0 && rating > 0) ? `单星价格: ¥${pps(price, rating)}` : '';
 }
 document.getElementById('price').addEventListener('input', updatePPS);
 
@@ -189,34 +377,29 @@ function addRecord() {
   const note = document.getElementById('note').value.trim();
   const line = `${name},${brand},${price},${starsStr(rating)},${pps(price, rating)},${comment},${note}`;
   navigator.clipboard.writeText(line).then(() => {
-    records.unshift({ name, brand, price, rating, comment, note });
-    save();
-    updateBrandList();
-    render();
-    clearForm();
+    finishAdd(name, brand, price, comment, note);
     toast('已添加并复制CSV到剪贴板 ☕📋');
   }).catch(() => {
-    records.unshift({ name, brand, price, rating, comment, note });
-    save();
-    updateBrandList();
-    render();
-    clearForm();
+    finishAdd(name, brand, price, comment, note);
     toast('已添加 ☕（剪贴板复制失败）', '#e94560');
   });
 }
-
+function finishAdd(name, brand, price, comment, note) {
+  records.unshift({ name, brand, price, rating, comment, note });
+  save(); updateBrandList(); renderStats(); renderChart(); render(); clearForm();
+}
 function clearForm() {
   ['name','brand','price','comment','note'].forEach(id => document.getElementById(id).value = '');
   rating = 0;
   document.querySelectorAll('#stars span').forEach(s => s.classList.remove('active'));
   document.getElementById('pps').textContent = '';
+  document.getElementById('rating-hint').textContent = '';
 }
-
 function deleteRecord(i) {
-  records.splice(i, 1);
-  save();
-  render();
-  toast('已删除');
+  const filtered = getFiltered();
+  const real = records.indexOf(filtered[i]);
+  if (real > -1) records.splice(real, 1);
+  save(); renderStats(); renderChart(); render(); toast('已删除');
 }
 
 function copyCSV() {
@@ -232,14 +415,9 @@ function copyCSV() {
 
 function exportAll() {
   let csv = '品名,品牌,价格,评分,单星价格,评价,备注\n';
-  records.forEach(r => {
-    csv += `${r.name},${r.brand},${r.price},${starsStr(r.rating)},${pps(r.price, r.rating)},${r.comment},${r.note || ''}\n`;
-  });
+  records.forEach(r => { csv += `${r.name},${r.brand},${r.price},${starsStr(r.rating)},${pps(r.price, r.rating)},${r.comment},${r.note || ''}\n`; });
   const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = 'coffee.csv';
-  a.click();
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'coffee.csv'; a.click();
   toast('CSV已导出 📁');
 }
 
@@ -251,41 +429,82 @@ function sortBy(field) {
     if (typeof va === 'string') return sortAsc ? va.localeCompare(vb) : vb.localeCompare(va);
     return sortAsc ? va - vb : vb - va;
   });
-  save();
-  render();
+  save(); render();
 }
 
 function updateBrandList() {
   const brands = [...new Set(records.map(r => r.brand))];
   document.getElementById('brand-list').innerHTML = brands.map(b => `<option value="${b}">`).join('');
+  const sel = document.getElementById('filter-brand');
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">全部品牌</option>' + brands.map(b => `<option value="${b}">${b}</option>`).join('');
+  sel.value = cur;
+}
+
+function getFiltered() {
+  const search = document.getElementById('search').value.trim().toLowerCase();
+  const brandF = document.getElementById('filter-brand').value;
+  const ratingF = parseInt(document.getElementById('filter-rating').value) || 0;
+  return records.filter(r => {
+    if (brandF && r.brand !== brandF) return false;
+    if (r.rating < ratingF) return false;
+    if (search && !r.name.toLowerCase().includes(search) && !(r.comment||'').toLowerCase().includes(search)) return false;
+    return true;
+  });
 }
 
 function render() {
+  const filtered = getFiltered();
   const tbody = document.getElementById('tbody');
   const empty = document.getElementById('empty');
-  document.getElementById('count').textContent = `共 ${records.length} 条记录`;
-  if (!records.length) { tbody.innerHTML = ''; empty.style.display = ''; return; }
+  const pageSize = parseInt(document.getElementById('page-size').value) || 0;
+  const total = filtered.length;
+
+  // 分页计算
+  let paged = filtered;
+  let totalPages = 1;
+  if (pageSize > 0) {
+    totalPages = Math.max(1, Math.ceil(total / pageSize));
+    if (currentPage > totalPages) currentPage = totalPages;
+    paged = filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+  } else {
+    currentPage = 1;
+  }
+
+  document.getElementById('count').textContent = `${total} / ${records.length} 条`;
+  if (!filtered.length) { tbody.innerHTML = ''; empty.style.display = ''; document.getElementById('pagination').innerHTML = ''; return; }
   empty.style.display = 'none';
-  tbody.innerHTML = records.map((r, i) => `<tr>
+  tbody.innerHTML = paged.map((r, i) => {
+    const realIdx = filtered.indexOf(r);
+    return `<tr>
     <td>${esc(r.name)}</td>
     <td><span class="badge">${esc(r.brand)}</span></td>
     <td>¥${r.price}</td>
-    <td class="rating-cell">${starsStr(r.rating)}</td>
+    <td style="white-space:nowrap">${starsStr(r.rating)}</td>
     <td>¥${pps(r.price, r.rating)}</td>
     <td>${esc(r.comment)}</td>
     <td>${esc(r.note || '')}</td>
-    <td><span style="cursor:pointer;opacity:0.5" onclick="deleteRecord(${i})" title="删除">🗑️</span></td>
-  </tr>`).join('');
+    <td><span style="cursor:pointer;opacity:0.5" onclick="deleteRecord(${realIdx})" title="删除">🗑️</span></td>
+  </tr>`;
+  }).join('');
+
+  // 分页控件
+  const pg = document.getElementById('pagination');
+  if (pageSize > 0 && totalPages > 1) {
+    pg.innerHTML = `
+      <span style="cursor:pointer;${currentPage<=1?'opacity:0.3;pointer-events:none':''}" onclick="currentPage--;render()">◀</span>
+      <span style="color:var(--text2)">${currentPage} / ${totalPages}</span>
+      <span style="cursor:pointer;${currentPage>=totalPages?'opacity:0.3;pointer-events:none':''}" onclick="currentPage++;render()">▶</span>`;
+  } else {
+    pg.innerHTML = '';
+  }
 }
 
 function esc(s) { const d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
-
 function toast(msg, bg) {
   const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.style.background = bg || '#4caf50';
-  t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 2000);
+  t.textContent = msg; t.style.background = bg || '#4caf50';
+  t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2000);
 }
 
 init();
